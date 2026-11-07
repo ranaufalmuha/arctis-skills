@@ -31,12 +31,19 @@ Run these commands in your terminal:
 
 ```sh
 codex plugin marketplace add ranaufalmuha/arctis-skills
-codex plugin add arctis@arctis-skills
+codex plugin install arctis@arctis-skills
 ```
 
-For a local checkout, replace the first command with `codex plugin marketplace add /path/to/arctis-skills`. Run `codex plugin list --marketplace arctis-skills` to check the installation. Start a new Codex session and ask it to use the `frontend`, `backend`, or `monorepo` skill for the relevant task.
+Inside a Codex session, the equivalent commands are `/plugin marketplace add ranaufalmuha/arctis-skills` and `/plugin install arctis@arctis-skills`. Start a new session, then use `/skills` to check the installation or ask it to use the `frontend`, `backend`, or `monorepo` skill for the relevant task. Choose the `user` or `project` scope during installation as appropriate.
 
-The GitHub commands require the plugin manifests to be pushed to `ranaufalmuha/arctis-skills` first. Both plugins use the skill files in `skills/architecture/`.
+### Codex
+
+Run these commands in your terminal:
+
+```sh
+codex plugin marketplace add ranaufalmuha/arctis-skills
+codex plugin add arctis@arctis-skills
+```
 
 ## Manual installation
 
