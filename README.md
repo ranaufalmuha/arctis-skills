@@ -1,73 +1,115 @@
-# Arctis Skills
+# Arctis Architecture
 
 **Structure your code. Enforce your rules.**
 
-Arctis Skills is a reusable collection of [Agent Skills](https://agentskills.io/specification) for engineering standards across projects, including Antigane projects. Its architecture category contains Arctis Architecture. This is an instruction repository, not an application starter.
-
-## Philosophy
-
-The rules make ownership and dependency direction visible so code stays easy to audit and maintain. The frontend standard is deliberately strict: pages compose, features own behavior, and shared code remains feature-agnostic. Backend guidance establishes clear responsibilities while leaving its directory layout open for future decisions. The monorepo skill coordinates these standards across applications without prescribing a repository layout or toolchain.
-
-## Skills
+Arctis is a plugin for Codex and Claude Code that applies consistent frontend and backend architecture across projects. It includes three skills: `frontend`, `backend`, and `monorepo`.
 
 | Skill | Use it for |
 | --- | --- |
-| [`frontend`](skills/architecture/frontend/SKILL.md) | React, Vite, TypeScript, and Tauri frontend implementation, refactoring, and review |
-| [`backend`](skills/architecture/backend/SKILL.md) | TypeScript backend implementation, refactoring, and review, especially Hono APIs |
-| [`monorepo`](skills/architecture/monorepo/SKILL.md) | Coordination of architecture work across applications and shared packages |
+| `frontend` | React, Vite, TypeScript, and Tauri frontend implementation, refactoring, and review |
+| `backend` | TypeScript backend implementation, refactoring, and review, especially Hono APIs |
+| `monorepo` | Coordination of architecture work across applications and shared packages |
 
-```text
-arctis-skills/
-├── skills/
-│   └── architecture/
-│       ├── frontend/
-│       │   ├── SKILL.md
-│       │   ├── package.json
-│       │   ├── package-lock.json
-│       │   ├── references/
-│       │   │   ├── structure.md
-│       │   │   ├── routing.md
-│       │   │   ├── boundaries.md
-│       │   │   └── enforcement.md
-│       │   ├── scripts/
-│       │   │   └── validate-architecture.mjs
-│       │   └── tests/
-│       │       └── validate-architecture.test.mjs
-│       ├── backend/
-│       │   ├── SKILL.md
-│       │   └── references/
-│       │       ├── structure.md
-│       │       └── boundaries.md
-│       └── monorepo/
-│           └── SKILL.md
-├── templates/
-│   └── AGENTS.md
-├── AGENTS.md
-├── README.md
-└── .gitignore
+## Installation
+
+Choose the commands for your agent. Both install the same `frontend`, `backend`, and `monorepo` skills.
+
+### Claude Code
+
+Run these commands in your terminal:
+
+```sh
+claude plugin marketplace add ranaufalmuha/arctis-skills
+claude plugin install arctis@arctis-skills
 ```
 
-## Install and use
+Inside a Claude Code session, the equivalent commands are `/plugin marketplace add ranaufalmuha/arctis-skills` and `/plugin install arctis@arctis-skills`. Start a new session, then use `/skills` to check the installation or `/arctis:frontend` to invoke a skill. Choose the `user` or `project` scope during installation as appropriate.
 
-Copy **each entire leaf skill directory**, including its `references/` folder and any validation assets, to a skill location supported by your AI coding agent. `skills/architecture/` is an organizational category, not an installable skill. The Agent Skills specification defines the skill format; discovery and installation paths depend on the agent. See your agent's documentation before choosing a location.
+### Codex
 
-For **Codex**, the [official skill documentation](https://learn.chatgpt.com/docs/build-skills) lists `.agents/skills/` at a repository root for project-level skills and `~/.agents/skills/` for user-level skills. For example, from this repository on a Unix-like shell:
+Run these commands in your terminal:
+
+```sh
+codex plugin marketplace add ranaufalmuha/arctis-skills
+codex plugin add arctis@arctis-skills
+```
+
+For a local checkout, replace the first command with `codex plugin marketplace add /path/to/arctis-skills`. Run `codex plugin list --marketplace arctis-skills` to check the installation. Start a new Codex session and ask it to use the `frontend`, `backend`, or `monorepo` skill for the relevant task.
+
+The GitHub commands require the plugin manifests to be pushed to `ranaufalmuha/arctis-skills` first. Both plugins use the skill files in `skills/architecture/`.
+
+## Manual installation
+
+To use the skills without a plugin, copy each entire leaf skill directory, including its references and validator assets, into your agent's skill directory.
+
+### Claude Code (project scope)
+
+```sh
+mkdir -p /path/to/project/.claude/skills
+cp -R skills/architecture/frontend skills/architecture/backend skills/architecture/monorepo \
+  /path/to/project/.claude/skills/
+```
+
+### Claude Code (user scope)
+
+```sh
+mkdir -p ~/.claude/skills
+cp -R skills/architecture/frontend skills/architecture/backend skills/architecture/monorepo \
+  ~/.claude/skills/
+```
+
+After copying, restart Claude Code and run `/skills` to verify the skills loaded.
+
+### Codex (project scope)
+
+Codex uses `.agents/skills/` instead of `.claude/skills/`:
 
 ```sh
 mkdir -p /path/to/project/.agents/skills
-cp -R skills/architecture/frontend skills/architecture/backend skills/architecture/monorepo /path/to/project/.agents/skills/
+cp -R skills/architecture/frontend skills/architecture/backend skills/architecture/monorepo \
+  /path/to/project/.agents/skills/
 ```
 
-The frontend validator requires Node.js 20 or newer. In the target repository, install its pinned validation dependency with `npm ci --prefix .agents/skills/frontend`, then run `node .agents/skills/frontend/scripts/validate-architecture.mjs /path/to/frontend-app`. See the frontend [enforcement guide](skills/architecture/frontend/references/enforcement.md) for monorepo and CI use.
+For user scope, copy the same directories into `~/.agents/skills/`. See the [Codex skills documentation](https://developers.openai.com/codex/skills) for supported locations.
 
-For a user-level Codex installation, copy the same leaf skill directories into `~/.agents/skills/` instead. These are Codex paths, not universal Agent Skills paths. Project-level installation keeps a team's rules with its repository; user-level installation makes them available across your projects. Consult the [Codex documentation](https://learn.chatgpt.com/docs/build-skills) if your setup differs.
+## Frontend validator
 
-In a target repository, adapt [`templates/AGENTS.md`](templates/AGENTS.md) into its root `AGENTS.md`. It carries essential constraints even when a skill is not automatically selected. For an existing codebase, first identify its frontend and backend applications, install the relevant skill directories, and ask the agent to assess current structure and import violations before making broad moves. Apply frontend rules separately to each frontend app in a monorepo.
+The `frontend` skill includes an optional static architecture validator for local checks and CI. It requires Node.js 20 or newer and its pinned dependencies. After copying the skill manually, or when its installed plugin path is known, follow the [enforcement guide](skills/architecture/frontend/references/enforcement.md) to install dependencies and run it against each frontend app.
 
-Compatible agents may select a skill from its description or allow explicit invocation. Ask the agent to use `frontend`, `backend`, or `monorepo` for the relevant work, and verify that the skill is available in that agent's environment. Frontend and backend remain independently usable.
+## Repository layout
+
+```text
+arctis-skills/
+├── .agents/plugins/marketplace.json      # Codex marketplace
+├── .claude-plugin/                        # Claude Code plugin and marketplace
+├── .codex-plugin/plugin.json              # Codex plugin
+├── skills/architecture/
+│   ├── frontend/                          # Skill, references, validator, tests
+│   ├── backend/                           # Skill and references
+│   └── monorepo/SKILL.md
+├── templates/AGENTS.md
+├── AGENTS.md
+└── README.md
+```
+
+## What each skill enforces
+
+- **Frontend**: every `src/` contains exactly `pages/`, `feat/`, and `shared/`. Pages compose, features own behavior, and shared stays feature-agnostic. Dependencies flow `pages → feat → shared` with no cross-feature, reverse, or circular imports.
+- **Backend**: organize by domain ownership. Keep HTTP handlers thin, separate transport/validation/business/data access, and avoid circular or unnecessary coupling.
+- **Monorepo**: coordinate the frontend and backend skills per application without prescribing a monorepo tool or directory layout.
+
+Each skill is independently usable. The monorepo skill coordinates them; it does not replace either.
+
+## AGENTS.md
+
+In a target repository, adapt [`templates/AGENTS.md`](templates/AGENTS.md) into its root `AGENTS.md`. It carries the essential constraints even when a skill is not automatically selected. For an existing codebase, ask the agent to assess current structure and import violations before making broad moves.
+
+## Philosophy
+
+The rules make ownership and dependency direction visible so code stays easy to audit and maintain. The frontend standard is deliberately strict; backend guidance establishes clear responsibilities while leaving directory layout open for future decisions.
 
 ## Enforcement and extension
 
-Skills and `AGENTS.md` guide agent behavior. The frontend skill also includes an executable validator for structural and resolved import boundaries; it runs only when a project invokes it locally or in CI. Keep the project's lint, type-check, and test tooling alongside it. Semantic ownership and maintainability still require review. Agents must run available checks and report violations rather than silently bypassing them.
+Skills and `AGENTS.md` guide agent behavior. The frontend skill also includes an executable validator for structural and resolved import boundaries; it runs only when a project invokes it locally or in CI. Keep the project's lint, type-check, and test tooling alongside it.
 
-To extend the collection, add a focused skill directory with a spec-compliant `SKILL.md` under the relevant category, keep its entrypoint concise, and place detailed rules in linked references. `testing/`, `security/`, and `deployment/` are possible future categories; create them only when they contain a real skill. Update the README and reusable template when a new skill changes their guidance. Preserve established constraints unless a new architecture decision explicitly changes them, and validate frontmatter, links, and consistency before sharing.
+To extend the collection, add a focused skill directory with a spec-compliant `SKILL.md` under the relevant category, keep its entrypoint concise, and place detailed rules in linked references. Preserve established constraints unless a new architecture decision explicitly changes them.

@@ -1,0 +1,14 @@
+{
+  "name": "arctis-skills",
+  "description": "Arctis Architecture Agent Skills — enforceable frontend and backend architecture standards.",
+  "owner": {
+    "name": "ranaufalmuha"
+  },
+  "plugins": [
+    {
+      "name": "arctis",
+      "source": "./",
+      "description": "Architecture skills for React, TypeScript, and Hono projects"
+    }
+  ]
+}
