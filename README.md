@@ -7,7 +7,7 @@ Arctis is a plugin for Codex and Claude Code that applies consistent frontend an
 | Skill | Use it for |
 | --- | --- |
 | `frontend` | React, Vite, TypeScript, and Tauri frontend implementation, refactoring, and review |
-| `backend` | TypeScript backend implementation, refactoring, and review, especially Hono APIs |
+| `backend` | TypeScript backend implementation, refactoring, and review, especially Hono APIs with explicit module and layer boundaries |
 | `monorepo` | Coordination of architecture work across applications and shared packages |
 
 ## Installation
@@ -79,9 +79,12 @@ cp -R skills/architecture/frontend skills/architecture/backend skills/architectu
 
 For user scope, copy the same directories into `~/.agents/skills/`. See the [Codex skills documentation](https://developers.openai.com/codex/skills) for supported locations.
 
-## Frontend validator
+## Architecture validators
 
-The `frontend` skill includes an optional static architecture validator for local checks and CI. It requires Node.js 20 or newer and its pinned dependencies. After copying the skill manually, or when its installed plugin path is known, follow the [enforcement guide](skills/architecture/frontend/references/enforcement.md) to install dependencies and run it against each frontend app.
+The `frontend` and `backend` skills include optional static architecture validators for local checks and CI. They require Node.js 20 or newer and their pinned TypeScript dependency. After copying a skill manually, or when its installed plugin path is known, follow its enforcement guide to install dependencies and run it against each application:
+
+- [Frontend enforcement](skills/architecture/frontend/references/enforcement.md)
+- [Backend enforcement](skills/architecture/backend/references/enforcement.md)
 
 ## Repository layout
 
@@ -92,7 +95,7 @@ arctis-skills/
 ├── .codex-plugin/plugin.json              # Codex plugin
 ├── skills/architecture/
 │   ├── frontend/                          # Skill, references, validator, tests
-│   ├── backend/                           # Skill and references
+│   ├── backend/                           # Skill, references, validator, tests
 │   └── monorepo/SKILL.md
 ├── templates/AGENTS.md
 ├── AGENTS.md
@@ -102,7 +105,7 @@ arctis-skills/
 ## What each skill enforces
 
 - **Frontend**: every `src/` contains exactly `pages/`, `feat/`, and `shared/`. Pages compose, features own behavior, and shared stays feature-agnostic. Dependencies flow `pages → feat → shared` with no cross-feature, reverse, or circular imports.
-- **Backend**: organize by domain ownership. Keep HTTP handlers thin, separate transport/validation/business/data access, and avoid circular or unnecessary coupling.
+- **Backend**: every module owns `api/`, `schemas/`, `services/`, and `repositories/`. Dependencies flow inward to `db/generated`; cross-module imports, reverse-layer imports, direct persistence access from API/services, and circular dependencies fail validation.
 - **Monorepo**: coordinate the frontend and backend skills per application without prescribing a monorepo tool or directory layout.
 
 Each skill is independently usable. The monorepo skill coordinates them; it does not replace either.
@@ -113,10 +116,10 @@ In a target repository, adapt [`templates/AGENTS.md`](templates/AGENTS.md) into 
 
 ## Philosophy
 
-The rules make ownership and dependency direction visible so code stays easy to audit and maintain. The frontend standard is deliberately strict; backend guidance establishes clear responsibilities while leaving directory layout open for future decisions.
+The rules make ownership and dependency direction visible so code stays easy to audit and maintain. Frontend and backend standards are both explicit; each skill is independently usable and has its own validator.
 
 ## Enforcement and extension
 
-Skills and `AGENTS.md` guide agent behavior. The frontend skill also includes an executable validator for structural and resolved import boundaries; it runs only when a project invokes it locally or in CI. Keep the project's lint, type-check, and test tooling alongside it.
+Skills and `AGENTS.md` guide agent behavior. Frontend and backend skills include executable validators for structural and resolved import boundaries; both reject `*.test.*` and `*.spec.*` files under `src/`. They run only when a project invokes them locally or in CI. Keep the project's lint, type-check, build, and test tooling alongside them.
 
 To extend the collection, add a focused skill directory with a spec-compliant `SKILL.md` under the relevant category, keep its entrypoint concise, and place detailed rules in linked references. Preserve established constraints unless a new architecture decision explicitly changes them.
