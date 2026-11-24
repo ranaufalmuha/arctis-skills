@@ -1,51 +1,25 @@
-# Structure and ownership
+# Framework-agnostic ownership
 
-## Mandatory application structure
+Composition connects independent features; features own behavior; shared provides feature-independent primitives. These roles are stable, but physical folder names and test locations follow the selected framework adapter. Do not enforce a universal three-directory src tree.
 
-Every frontend application has exactly three architectural directories directly under `src/`:
+## Select one adapter
 
-```text
-src/
-├── pages/
-├── feat/
-└── shared/
-```
+| Application | Adapter | Automated architecture coverage |
+| --- | --- | --- |
+| React SPA with explicit registration | [React](frameworks/react.md) | spa profile |
+| Next.js App or Pages Router | [Next.js](frameworks/nextjs.md) | next-app / next-pages profiles; documented limits |
+| Vue with Vue Router | [Vue](frameworks/vue.md) | Manual architecture review + native tooling |
+| Nuxt | [Nuxt](frameworks/nuxt.md) | Manual architecture review + native tooling |
+| SvelteKit | [SvelteKit](frameworks/sveltekit.md) | Manual architecture review + native tooling |
+| Angular | [Angular](frameworks/angular.md) | Manual architecture review + native tooling |
+| Other framework/router mode | [Other](frameworks/other.md) | Research and explicit mapping first |
 
-Minimal bootstrap or declaration files such as `main.tsx`, `vite-env.d.ts`, and platform entrypoints may sit directly under `src/`. Application logic belongs in the three directories. Do not add `src/components/`, `src/hooks/`, `src/utils/`, `src/lib/`, `src/services/`, `src/types/`, `src/store/`, or `src/styles/` as architectural roots. Do not add empty directories for visual symmetry.
+Vite is build tooling; React/Vue are UI choices; Next.js/Nuxt add routing/runtime conventions. Tauri does not identify its hosted UI framework. Prefer the most specific adapter and load only its relevant references.
 
-## Pages compose
+## Common responsibilities
 
-`pages/` contains only page components (`*.tsx`, including `index.tsx`) and `route.tsx` route configuration files, in route groups where useful. It owns page-level composition, not feature implementation. Pages may assemble `feat/` and `shared/` components and use external packages. Do not put hooks, utilities, services, schemas, stores, types, styles, or reusable components in `pages/`; do not add implementation directories there. A page may contain simple route-specific UI and rendering. Move complex state, network orchestration, and business behavior to the owning feature.
+Route entrypoints and app shells stay thin. Keep business state, network orchestration, and complex behavior in named features. Feature-specific UI belongs to the feature even when several pages use it. Promote only genuinely feature-independent responsibilities to shared; never move business logic there to bypass isolation.
 
-Prefer pages under about 150 lines and regular components under about 250 lines. These are review guidelines, not validator failures. Split cohesive code only when a meaningful component or responsibility emerges.
+Use framework vocabulary inside features: hooks, composables, services, components, or colocated files as appropriate. Create occupied directories only. Native config, public/static assets, generated output, and runtime entrypoints retain their prescribed locations. Record ownership where the path alone is ambiguous.
 
-## Features implement
-
-Each immediate child of `feat/` is one independent feature. Keep its implementation inside that boundary. Use only needed subdirectories from this vocabulary: `components/`, `hooks/`, `utils/`, `types/`, `styles/`, `services/`, `constants/`, `schemas/`, `context/`, and `store/`. Files may also live at the feature root. Do not create a barrel or wrapper for every directory by default.
-
-```text
-feat/
-├── auth/
-│   ├── components/LoginForm.tsx
-│   ├── hooks/useLogin.ts
-│   └── services/login.ts
-└── dashboard/
-    └── components/RevenueSection.tsx
-```
-
-## Shared provides primitives
-
-`shared/` contains feature-independent UI primitives, hooks, utilities, types, styling, validation helpers, constants, and infrastructure. Its optional subdirectories use the same vocabulary as features. Keep modules small and cohesive; shared is not a home for arbitrary domain logic. Generic primitives may begin here before multiple features use them.
-
-When independent features duplicate an implementation, identify its smallest reusable responsibility, verify that it has no feature ownership, move that part to `shared/`, update consumers, remove duplicates, and rerun boundary checks and tests. A component used by two **pages** can remain in its owning **feature**; page count alone does not justify promotion. Never move an entire business feature to `shared/` to bypass isolation.
-
-## Common anti-patterns
-
-- Business logic embedded in a page or a route file.
-- A cross-feature dependency disguised by a barrel, alias, or type-only import.
-- Feature-specific names or behavior in `shared/`.
-- Empty folder trees, unnecessary service layers, trivial one-line hooks, and wrappers with no responsibility.
-- Oversized modules with unrelated helpers or deeply nested directories that obscure ownership.
-- Co-located `*.test.*` or `*.spec.*` files under `src/`; tests belong in the application's `tests/` tree.
-
-Read [routing](routing.md) for page groups, [boundaries](boundaries.md) for permitted dependency directions, and [testing](testing.md) for test placement.
+Adapters distinguish official conventions from Arctis choices and record research dates. Follow official guidance first; fill undocumented ownership choices with a minimal Arctis mapping. Preserve existing equivalent structures unless migration is requested. Read [boundaries](boundaries.md), [routing](routing.md), and [testing](testing.md) for common rules.

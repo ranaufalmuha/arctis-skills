@@ -13,10 +13,24 @@ try {
 }
 
 const appRoot = canonical(path.resolve(process.argv[2] ?? '.'));
-const srcRoot = path.join(appRoot, 'src');
+const profileArg = process.argv.indexOf('--framework');
+const profile = profileArg < 0 ? 'spa' : process.argv[profileArg + 1];
+if (!['spa', 'next-app', 'next-pages'].includes(profile)) {
+  console.error('Use --framework spa|next-app|next-pages');
+  process.exit(2);
+}
+const isNext = profile !== 'spa';
+const routeRoot = profile === 'next-app' ? 'app' : 'pages';
+const srcRoot = isNext && fs.existsSync(path.join(appRoot, routeRoot)) ? appRoot : path.join(appRoot, 'src');
+function sourceFiles() {
+  if (srcRoot !== appRoot) return walk(srcRoot);
+  return [...allowedRoots].flatMap((name) => walk(path.join(srcRoot, name))).concat(
+    fs.readdirSync(appRoot, { withFileTypes: true }).filter((e) => e.isFile() && /^(proxy|middleware|instrumentation|instrumentation-client)\.[jt]s$/.test(e.name)).map((e) => path.join(appRoot, e.name))
+  );
+}
 const sourceExtension = /\.(?:[cm]?[jt]sx?)$/;
 const testFilePattern = /\.(test|spec)\.[cm]?[jt]sx?$/;
-const allowedRoots = new Set(['pages', 'feat', 'shared']);
+const allowedRoots = new Set([routeRoot, 'feat', 'shared']);
 const forbiddenPageDirs = new Set(['components', 'hooks', 'utils', 'services', 'store', 'types', 'styles', 'schemas', 'context', 'constants', 'lib']);
 const errors = [];
 const warnings = [];
@@ -57,7 +71,7 @@ function owner(file) {
   if (!inside(srcRoot, file)) return { layer: 'outside' };
   const parts = path.relative(srcRoot, file).split(path.sep);
   if (parts[0] === 'feat') return { layer: 'feat', feature: parts[1] };
-  if (parts[0] === 'pages') return { layer: 'pages', route: parts.at(-1) === 'route.tsx' };
+  if (parts[0] === routeRoot) return { layer: 'pages', route: !isNext && parts.at(-1) === 'route.tsx' };
   if (parts[0] === 'shared') return { layer: 'shared' };
   return { layer: 'bootstrap' };
 }
@@ -67,14 +81,14 @@ function checkLayout() {
     errors.push('src MISSING_SRC: application root must contain src/');
     return;
   }
-  for (const file of walk(srcRoot)) {
+  for (const file of sourceFiles()) {
     if (testFilePattern.test(file)) issue(file, null, 'TEST_IN_SRC', 'test and spec files belong in tests/, not src/');
   }
   for (const entry of fs.readdirSync(srcRoot, { withFileTypes: true })) {
-    if (entry.isDirectory() && !allowedRoots.has(entry.name)) {
+    if (srcRoot !== appRoot && entry.isDirectory() && !allowedRoots.has(entry.name)) {
       errors.push(`src/${entry.name} INVALID_ROOT: only pages/, feat/, and shared/ may be architectural directories`);
     }
-    if (entry.isSymbolicLink()) {
+    if (entry.isSymbolicLink() && (srcRoot !== appRoot || allowedRoots.has(entry.name))) {
       errors.push(`src/${entry.name} SYMLINK_ROOT: symlinked roots cannot be validated safely`);
     }
   }
@@ -83,8 +97,19 @@ function checkLayout() {
       errors.push(`src/${name} MISSING_ROOT: required architectural directory is missing`);
     }
   }
+  if (isNext) {
+    const otherRouter = routeRoot === 'app' ? 'pages' : 'app';
+    if (fs.existsSync(path.join(srcRoot, otherRouter)) || (srcRoot === appRoot && ['app', 'pages'].some((name) => fs.existsSync(path.join(appRoot, 'src', name))))) {
+      errors.push('UNSUPPORTED_MIXED_ROUTER: select one router/source location; mixed migrations require separate review');
+    }
+    for (const file of walk(path.join(srcRoot, routeRoot))) {
+      if (profile === 'next-app' && sourceExtension.test(file) && !/^(page|layout|template|loading|error|global-error|not-found|default|route|sitemap|robots|manifest|icon|apple-icon|opengraph-image|twitter-image|forbidden|unauthorized)\.[jt]sx?$/.test(path.basename(file))) {
+        issue(file, null, 'INVALID_APP_FILE', 'app code contains native entrypoints only; move implementation into feat/shared');
+      }
+    }
+  }
   const pages = path.join(srcRoot, 'pages');
-  if (fs.existsSync(pages)) {
+  if (!isNext && fs.existsSync(pages)) {
     for (const file of walk(pages)) {
       if (!file.endsWith('.tsx')) issue(file, null, 'INVALID_PAGE_FILE', 'pages/ contains only page components (*.tsx) and route.tsx');
     }
@@ -160,7 +185,8 @@ function checkBoundary(source, target, node) {
     if (inside(appRoot, target)) issue(source, node, 'OUTSIDE_SRC', `local source ${rel(target)} is outside src/`);
     return;
   }
-  if (from.layer === 'bootstrap' || to.layer === 'bootstrap') return;
+  if (to.layer === 'bootstrap' && from.layer !== 'bootstrap') return issue(source, node, 'IMPORT_BOOTSTRAP', 'layers cannot import bootstrap/configuration code');
+  if (from.layer === 'bootstrap') return;
   if (from.layer === 'shared' && to.layer !== 'shared') issue(source, node, 'SHARED_BOUNDARY', `shared/ cannot import ${rel(target)}`);
   if (from.layer === 'feat' && to.layer === 'pages') issue(source, node, 'FEATURE_TO_PAGES', `feature cannot import ${rel(target)}`);
   if (from.layer === 'feat' && to.layer === 'feat' && from.feature !== to.feature) issue(source, node, 'CROSS_FEATURE', `${from.feature} cannot import ${to.feature}`);
@@ -197,11 +223,17 @@ function checkCycles() {
 }
 
 try {
+  const packageFile = path.join(appRoot, 'package.json');
+  const manifest = fs.existsSync(packageFile) ? JSON.parse(fs.readFileSync(packageFile, 'utf8')) : {};
+  const dependencies = { ...manifest.dependencies, ...manifest.devDependencies };
+  if (['vue', 'nuxt', 'svelte', '@sveltejs/kit', '@angular/core'].some((name) => name in dependencies) || sourceFiles().some((file) => /\.(vue|svelte)$/.test(file))) {
+    throw new Error('UNSUPPORTED_FRAMEWORK: use the framework adapter and native checks; this validator supports React SPA and Next.js only');
+  }
   checkLayout();
   if (fs.existsSync(srcRoot)) {
     const options = compilerOptions();
     const cache = ts.createModuleResolutionCache(appRoot, (name) => name, options);
-    const files = walk(srcRoot).filter((file) => sourceExtension.test(file));
+    const files = sourceFiles().filter((file) => sourceExtension.test(file));
     for (const file of files) {
       const source = canonical(file);
       const sourceFile = ts.createSourceFile(source, fs.readFileSync(file, 'utf8'), ts.ScriptTarget.Latest, true, file.endsWith('x') ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
@@ -209,6 +241,10 @@ try {
       for (const { node, specifier } of importsOf(sourceFile)) {
         const resolved = ts.resolveModuleName(specifier, source, options, ts.sys, cache).resolvedModule;
         if (!resolved) {
+          if (isNext && /\.(css|scss|sass|png|jpg|jpeg|gif|svg|webp|ico|woff2?|ttf)$/.test(specifier)) {
+            warnings.push(`${rel(source)}: asset import ${specifier} requires framework build validation`);
+            continue;
+          }
           if (specifier.startsWith('.') || path.isAbsolute(specifier) || matchesAlias(specifier, options)) issue(source, node, 'UNRESOLVED_LOCAL', `cannot resolve ${specifier}`);
           continue;
         }

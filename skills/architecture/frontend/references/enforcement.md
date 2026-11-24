@@ -1,8 +1,14 @@
 # Automated enforcement
 
+This executable validator supports only the React SPA and Next.js profiles. Vue, Nuxt, SvelteKit, Angular, and other adapters have guidance plus native-tool/manual-review workflows, not bundled architecture validators. Never run this checker as proof of their architecture compliance.
+
+For Next.js use the [Next.js profile](frameworks/nextjs.md). The pages/route.tsx registration and mandatory src layout below apply to the SPA profile only. Feature isolation, shared ownership, no cycles, and external test placement remain common.
+
+Pass `--framework next-app` or `--framework next-pages` for Next.js; omission selects `spa`. Next profiles do not require route.tsx registries. App Router code uses native entrypoint names; route-to-route imports remain prohibited. See the linked profile for root-layout scan scope and unsupported mixed-router cases. This checker does not validate server/client graphs; use Next build checks.
+
 Use the bundled validator for Arctis-specific file placement, resolved import boundaries, route exceptions, and cycles. Use the host application's ESLint configuration for code quality and TypeScript for type safety. Keep all three in CI. General layer rules can also be reflected in an architecture-aware ESLint plugin such as [`eslint-plugin-boundaries`](https://github.com/javierbrea/eslint-plugin-boundaries), but a broad `pages → pages` allowance would break Arctis's narrow route exception. The bundled validator is the authoritative check for that exception; do not disable it because ESLint passes.
 
-## Runtime and installation
+## Runtime and installation (React SPA default)
 
 The validator requires Node.js 20 or newer and the skill's pinned TypeScript 5.9.3 dependency. The dependency is for validation only; it is not an application scaffold. Copy the **entire** `frontend/` skill directory into a [supported skill location](https://learn.chatgpt.com/docs/build-skills), then install its validator dependency once:
 
@@ -11,7 +17,7 @@ npm ci --prefix .agents/skills/frontend
 node .agents/skills/frontend/scripts/validate-architecture.mjs .
 ```
 
-The argument is the **frontend application root**, which must contain `src/` and may contain `tsconfig.json`. In a monorepo, run the validator separately for each frontend application, for example:
+The argument is the **frontend application root**, which in the default SPA profile must contain `src/` and may contain `tsconfig.json`. In a monorepo, run the validator separately for each supported frontend application, for example:
 
 ```sh
 node .agents/skills/frontend/scripts/validate-architecture.mjs apps/app
@@ -22,7 +28,7 @@ The validator reads `compilerOptions.paths` and normal TypeScript resolution fro
 
 For Codex, the [official documentation](https://learn.chatgpt.com/docs/build-skills) confirms repository-level `.agents/skills/` and user-level `~/.agents/skills/` locations. Other agents may use different paths. A project `AGENTS.md` should explicitly request the skill and retain the essential constraints because automatic skill activation is not guaranteed.
 
-## Checks performed
+## React SPA checks performed
 
 The validator checks:
 

@@ -1,12 +1,13 @@
 # Arctis Architecture
 
+
 **Structure your code. Enforce your rules.**
 
 Arctis is a plugin for Codex and Claude Code that applies consistent frontend, backend, and game architecture across projects. It includes four skills: `frontend`, `backend`, `game`, and `monorepo`.
 
 | Skill | Use it for |
 | --- | --- |
-| `frontend` | React, Vite, TypeScript, and Tauri frontend implementation, refactoring, and review |
+| `frontend` | Framework-aware React, Next.js, Vue, Nuxt, SvelteKit, and Angular architecture; Vite/Tauri use the hosted framework adapter |
 | `backend` | TypeScript backend implementation, refactoring, and review, especially Hono APIs with explicit module and layer boundaries |
 | `game` | Game implementation, refactoring, and review with Unity, Godot, Unreal Engine, Bevy, or an explicit mapping for another engine |
 | `monorepo` | Coordination of architecture work across applications and shared packages |
@@ -82,7 +83,7 @@ For user scope, copy the same directories into `~/.agents/skills/`. See the [Cod
 
 ## Architecture validators
 
-The `frontend` and `backend` skills include optional static architecture validators for local checks and CI. They require Node.js 20 or newer and their pinned TypeScript dependency. After copying a skill manually, or when its installed plugin path is known, follow its enforcement guide to install dependencies and run it against each application:
+The `frontend` and `backend` skills include optional static architecture validators for local checks and CI. They require Node.js 20 or newer and their pinned TypeScript dependency. After copying a skill manually, or when its installed plugin path is known, follow its enforcement guide to install dependencies and run it against each supported application (frontend coverage is React SPA/Next.js only):
 
 - [Frontend enforcement](skills/architecture/frontend/references/enforcement.md)
 - [Backend enforcement](skills/architecture/backend/references/enforcement.md)
@@ -106,12 +107,18 @@ arctis-skills/
 
 ## What each skill enforces
 
-- **Frontend**: every `src/` contains exactly `pages/`, `feat/`, and `shared/`. Pages compose, features own behavior, and shared stays feature-agnostic. Dependencies flow `pages → feat → shared` with no cross-feature, reverse, or circular imports.
+- **Frontend (SPA profile)**: every `src/` contains exactly `pages/`, `feat/`, and `shared/`. Pages compose, features own behavior, and shared stays feature-agnostic. Dependencies flow `pages → feat → shared` with no cross-feature, reverse, or circular imports.
 - **Backend**: every module owns `api/`, `schemas/`, `services/`, and `repositories/`. Dependencies flow inward to `db/generated`; cross-module imports, reverse-layer imports, direct persistence access from API/services, and circular dependencies fail validation.
 - **Game**: composition connects, features own gameplay and state, and shared provides primitives. Map those roles onto native engine layouts; declared public cross-feature contracts are allowed, internal access and cyclic module dependencies are not.
 - **Monorepo**: coordinate the frontend, backend, and game skills per application without prescribing a monorepo tool or directory layout.
 
 Each skill is independently usable. The monorepo skill coordinates them; it does not replace the domain skills.
+
+## Frontend framework adapters
+
+Frontend mirrors the game skill's engine-adapter approach: one common ownership policy with [framework-specific mappings](skills/architecture/frontend/references/structure.md). Official conventions come first; adapters distinguish Arctis choices from framework requirements. Vite is tooling, not a UI framework. Read only the selected framework's reference.
+
+The bundled validator covers React SPA and Next.js profiles. Vue, Nuxt, SvelteKit, and Angular currently have documented mappings and native-tool/manual-review workflows, not executable architecture validators. Test placement follows each adapter; Angular allows colocated tests.
 
 ## Game architecture
 

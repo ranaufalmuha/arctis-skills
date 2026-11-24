@@ -1,5 +1,13 @@
 # Dependency boundaries
 
+These ownership rules apply across framework mappings: composition may depend on independent features and shared; features may depend only on themselves and shared; shared never depends on features or composition. No cycles. A framework adapter changes physical paths and native composition, not feature isolation.
+
+Include component-template references, auto-imports, dependency injection, generated routing, and client/server imports in review. Static JS/TS checks cover only the documented executable profiles.
+
+## React SPA examples
+
+The pages paths and route.tsx exception below apply to the [React SPA adapter](frameworks/react.md). Other adapters map the same ownership to native locations and have their own routing rules.
+
 ```text
 pages ──> feat ──> shared
    └────────────────> shared

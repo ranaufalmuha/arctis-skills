@@ -1,26 +1,26 @@
 ---
 name: frontend
-description: Apply Arctis Frontend Architecture when creating, refactoring, or auditing React, TypeScript, Vite, Tauri, or compatible frontend applications. Enforce pages/feat/shared ownership, hierarchical route registration, isolated features, and resolved dependency boundaries.
+description: Apply Arctis Frontend Architecture when implementing, refactoring, or reviewing React, Next.js, Vue, Nuxt, SvelteKit, Angular, or other frontend applications. Map strict composition/features/shared ownership onto official framework conventions and select only supported architecture checks.
 ---
 
 # Arctis Frontend Architecture
 
-**Pages compose. Features implement. Shared provides reusable primitives.** Apply this skill independently to each frontend application, including apps in monorepos.
+**Composition connects. Features implement. Shared provides primitives. Frameworks determine physical layout.** Apply independently to each frontend application.
 
 ## Before coding
 
-1. Read the target project's `AGENTS.md`; locate the application's `src/` and inspect its pages, features, shared modules, route groups, aliases, and validation commands.
-2. Identify the owning feature and classify new code as page composition, feature implementation, or feature-independent shared code.
-3. Read [structure](references/structure.md) for file placement and reuse; [routing](references/routing.md) for page or route changes; [boundaries](references/boundaries.md) for imports and feature coordination; [testing](references/testing.md) for test placement; [enforcement](references/enforcement.md) for audits or validation setup.
+1. Read the project's AGENTS.md and inspect framework/version, router mode, source roots, generated files, aliases, runtime boundaries, and validation commands. Vite is build tooling and Tauri is a host, not an architecture profile.
+2. Use [framework selection](references/structure.md) to load the most specific adapter: [React](references/frameworks/react.md), [Next.js](references/frameworks/nextjs.md), [Vue](references/frameworks/vue.md), [Nuxt](references/frameworks/nuxt.md), [SvelteKit](references/frameworks/sveltekit.md), [Angular](references/frameworks/angular.md), or [other](references/frameworks/other.md).
+3. Read [boundaries](references/boundaries.md) for dependency rules, [routing](references/routing.md) for composition, [testing](references/testing.md) for test conventions, and [enforcement](references/enforcement.md) before running checks.
 
 ## During coding
 
-- Keep `pages/`, `feat/`, and `shared/` as the only architectural directories directly under `src/`. Minimal entrypoints and declarations may sit beside them; application logic belongs inside them.
-- Keep pages thin and route registration hierarchical. Never make one ordinary page depend on another.
-- Keep each `feat/<name>/` isolated. Dependencies flow `pages → feat → shared`, with `pages → shared` also allowed. Do not create reverse, cross-feature, or circular dependencies through any import form.
-- Promote only the smallest genuinely feature-independent responsibility to `shared/`. Avoid duplicate logic and abstractions without a purpose.
-- Keep `*.test.*` and `*.spec.*` files out of `src/`; tests belong in the application's `tests/` tree.
+- Follow official framework conventions first. Adapters label Arctis-specific ownership mappings and defaults. Preserve an existing equivalent layout; do not force pages, app, routes, or src on every framework.
+- Keep features isolated. Dependencies flow composition → features → shared, with composition → shared allowed. No cross-feature, reverse, or circular dependencies, including aliases, re-exports, templates, injection, and auto-imports.
+- Keep route entrypoints thin. Native/generated routing replaces manual registration where the framework requires it. Use only the adapter's explicit composition exceptions; never import another ordinary page for reuse.
+- Shared stays feature-independent. Create only needed files and directories; do not move domain behavior into shared to evade boundaries.
+- Preserve server/client, public/static, configuration, and generated-code boundaries. Test placement follows the adapter; React/Next external-test rules are not universal.
 
 ## Before completion
 
-Run the [architecture validator](references/enforcement.md), project ESLint, TypeScript checks, and relevant tests when available. Review route ownership, thin pages, and shared ownership. Do not silently disable, suppress, or weaken checks. Report which commands ran, unresolved violations, and validation limits. If a request conflicts with these rules, explain the conflict and implement a compliant path where possible.
+Use supported executable profiles only; other adapters require native tooling and explicit manual architecture review. Run relevant available lint/type/build/tests. Report framework/version, selected adapter, checks run, violations, and coverage limits. Never claim a TypeScript scan validates unparsed framework files or that documented adapters were runtime-tested.

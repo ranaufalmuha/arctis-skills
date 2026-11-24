@@ -21,7 +21,12 @@
     "unity",
     "godot",
     "unreal",
-    "bevy"
+    "bevy",
+    "nextjs",
+    "vue",
+    "nuxt",
+    "sveltekit",
+    "angular"
   ],
   "skills": [
     "./skills/architecture/"

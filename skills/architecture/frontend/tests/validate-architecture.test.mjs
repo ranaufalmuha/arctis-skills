@@ -153,3 +153,68 @@ test('nonliteral dynamic import reports a limitation', () => {
     assert.match(result.output, /dynamic import expression has no static target/);
   } finally { fs.rmSync(root, { recursive: true, force: true }); }
 });
+
+for (const profile of ['next-app', 'next-pages']) {
+  for (const location of ['src', '.']) {
+    for (const scenario of ['valid', 'cross-feature', 'reverse', 'route-import', 'test-placement', 'bootstrap-bypass', 'mixed-router', 'helper-in-app']) {
+      if (scenario === 'helper-in-app' && profile !== 'next-app') continue;
+      test(`${profile} ${location}: ${scenario}`, () => {
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'arctis-next-'));
+        const router = profile === 'next-app' ? 'app' : 'pages';
+        const entry = profile === 'next-app' ? 'page.tsx' : 'index.tsx';
+        const files = {
+          [`${router}/${entry}`]: "import '@/feat/auth/view';",
+          [`${router}/settings/${entry}`]: 'export default function Settings() { return null; }',
+          'feat/auth/view.tsx': "import '@/shared/value';",
+          'feat/user/data.ts': 'export const value = 1;',
+          'shared/value.ts': 'export const value = 1;',
+        };
+        if (profile === 'next-app') {
+          files['app/layout.tsx'] = "import './global.css';\n" + 'export default function Layout({children}) { return children; }';
+          files['app/(shop)/[id]/page.tsx'] = "import '@/feat/auth/view';";
+          files['app/api/status/route.ts'] = 'export function GET() {}';
+        }
+        if (scenario === 'mixed-router') files[`${router === 'app' ? 'pages' : 'app'}/page.tsx`] = 'export {};';
+        if (scenario === 'helper-in-app') files['app/helper.ts'] = 'export const helper = 1;';
+        if (scenario === 'cross-feature') files['feat/auth/view.tsx'] = "export * from '@/feat/user/data';";
+        if (scenario === 'reverse') files['shared/value.ts'] = `import '@/${router}/${entry.replace('.tsx', '')}';`;
+        if (scenario === 'route-import') files[`${router}/${entry}`] = `import './settings/${entry.replace('.tsx', '')}';`;
+        if (scenario === 'test-placement') files['feat/auth/view.test.ts'] = 'export {};';
+        if (scenario === 'bootstrap-bypass') {
+          files['feat/auth/view.tsx'] = "import '@/middleware';";
+          files['middleware.ts'] = "export * from '@/feat/user/data';";
+        }
+        try {
+          for (const [name, content] of Object.entries(files)) {
+            const target = path.join(root, location, name);
+            fs.mkdirSync(path.dirname(target), { recursive: true });
+            fs.writeFileSync(target, content);
+          }
+          fs.writeFileSync(path.join(root, 'tsconfig.json'), JSON.stringify({compilerOptions:{module:'ESNext',moduleResolution:'Bundler',jsx:'preserve',paths:{'@/*': [`./${location}/*`]}}}));
+          const result = spawnSync(process.execPath, [validator, root, '--framework', profile], {encoding:'utf8'});
+          assert.equal(result.status, scenario === 'valid' ? 0 : 1, result.stdout + result.stderr);
+        } finally { fs.rmSync(root, { recursive:true, force:true }); }
+      });
+    }
+  }
+}
+
+for (const extension of ['vue', 'svelte']) {
+  test(`unparsed ${extension} components cannot produce a successful architecture check`, () => {
+    const root = fixture({[`feat/home/View.${extension}`]: '<div>hello</div>'});
+    try {
+      const result = validate(root);
+      assert.equal(result.status, 2, result.output);
+      assert.match(result.output, /UNSUPPORTED_FRAMEWORK/);
+    } finally { fs.rmSync(root, {recursive:true, force:true}); }
+  });
+}
+test('Angular application is rejected as unsupported rather than TS-only validated', () => {
+  const root = fixture();
+  try {
+    fs.writeFileSync(path.join(root, 'package.json'), JSON.stringify({dependencies:{'@angular/core':'*'}}));
+    const result = validate(root);
+    assert.equal(result.status, 2, result.output);
+    assert.match(result.output, /UNSUPPORTED_FRAMEWORK/);
+  } finally { fs.rmSync(root, {recursive:true, force:true}); }
+});

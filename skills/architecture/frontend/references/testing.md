@@ -1,33 +1,7 @@
 # Testing and delivery
 
-## Test placement
+Follow the selected adapter's native test convention. React SPA and Next.js retain external project-root tests and reject test/spec files in application source. Angular permits colocated tests following its style guide. For other adapters use their documented default or the project's explicit test convention. Do not apply React test placement universally.
 
-Tests live outside `src/`. Application source under `src/pages/`, `src/feat/`, and `src/shared/` must not contain `*.test.*` or `*.spec.*` files.
+Tests exercise feature behavior, UI integration, and real routing flows. Native component/template checks matter for Vue, Svelte, and Angular. For server-capable frameworks verify runtime boundaries and relevant authorization behavior. A static import check is not a framework build or an end-to-end test.
 
-```text
-apps/web/
-├── src/
-│   ├── pages/
-│   ├── feat/
-│   └── shared/
-└── tests/
-    ├── unit/   # component, hook, and utility tests
-    └── e2e/    # Playwright or equivalent browser tests
-```
-
-Keep unit tests under `tests/unit/` and browser tests under `tests/e2e/` (or the application's documented equivalent). Do not invent a parallel test tree inside `src/`; the architecture validator rejects it.
-
-## Test responsibilities
-
-- Unit tests cover feature logic, hooks, pure utilities, and view-model mapping without a browser.
-- E2E tests cover real user flows through the router and rendered UI.
-- Shared primitives may have their own unit tests under `tests/unit/`.
-- Import source code from tests through the application's configured alias, for example `@/feat/auth/hooks/useLogin`.
-
-## Completion checklist
-
-- Architecture validator passes for the frontend app.
-- ESLint, TypeScript check, build, and relevant tests pass.
-- No test or spec file exists under `src/`.
-- Route ownership and feature boundaries still pass review after test additions.
-- Report any command that could not run and any unresolved violation. Never claim a check passed without its output.
+Run the architecture validator only for a supported profile, then relevant native lint/type/build/tests. With guidance-only adapters, review ownership explicitly and report the lack of automated architecture coverage. See [enforcement](enforcement.md). Do not claim a check passed when it was not run.

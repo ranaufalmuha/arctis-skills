@@ -1,20 +1,21 @@
 # Architecture guidance for AI agents
 
+
 Use the `frontend` skill for implementation, refactoring, or review of frontend files. Use the `backend` skill for backend files. Use the `game` skill for game projects and engine-based dedicated servers, including in-engine UI. For work spanning applications or shared packages in a monorepo, also use the `monorepo` skill to coordinate the work. If a required skill is unavailable, report that and use the constraints below; do not claim the skill was loaded.
 
 In a monorepo, apply the frontend rules independently to each frontend application (for example, `apps/app/`, `apps/admin/`, or `apps/web/`) and backend principles independently to each backend application (for example, `apps/api/`). Determine an application's role from its code, not its directory name alone.
 
-In frontend and backend applications, keep `*.test.*` and `*.spec.*` files out of `src/`; tests belong in that application's `tests/` tree.
+In React SPA, Next.js, and backend applications, keep `*.test.*` and `*.spec.*` files out of `src/`; tests belong in that application's `tests/` tree.
 
 For games, use the engine-native folder and test conventions mapped by the game skill. A React shell and its embedded game runtime have distinct owners; do not force the runtime into web layers.
 
 ## Non-negotiable frontend constraints
 
-- Each frontend application's `src/` has exactly three architectural directories: `pages/`, `feat/`, and `shared/`. Minimal bootstrap files and declarations may sit directly under `src/`; application logic belongs inside those directories. Do not add other architectural roots such as `src/components/`, `src/hooks/`, `src/utils/`, or `src/services/`.
-- `pages/` owns routing and thin page composition. Ordinary pages do not import other pages or route files. A `route.tsx` may import pages in its own directory and immediate child `route.tsx` files only for registration. The root `pages/route.tsx` aggregates routes; each route group has its own `route.tsx`. Do not add implementation directories inside `pages/`.
-- Each `feat/<name>/` is isolated: it may import itself and `shared/`, never another feature or `pages/`.
-- `shared/` may import `shared/` and external packages, never `feat/` or `pages/`. Keep business features out of `shared/`.
-- No circular dependencies. Aliases, barrels, type-only imports, and dynamic imports do not bypass boundaries. Check resolved module ownership. Do not silently disable or bypass architecture validation.
+- Select the frontend framework adapter before assigning folders. Follow native routing, assets, configuration, server/client boundaries, and test conventions; do not enforce one physical tree universally.
+- Composition connects features; each feature is isolated and may depend only on itself and shared. Shared never depends on features or composition. No cross-feature, reverse, or circular dependencies through imports, templates, auto-imports, or injection.
+- Keep entrypoints thin and shared feature-independent. Only the adapter's registration/composition exceptions permit route-level source imports. Never import another ordinary page for reuse.
+- React SPA retains pages/feat/shared and hierarchical route.tsx registration. Next.js uses native app/pages routing. Other adapters map logical ownership onto their framework's official layout.
+- Run bundled validation only for spa, next-app, or next-pages profiles. Other frameworks require native tooling and manual architecture review; report missing automatic coverage rather than claiming success.
 
 ## Non-negotiable backend constraints
 
@@ -33,6 +34,6 @@ For games, use the engine-native folder and test conventions mapped by the game 
 - Preserve engine asset identities, serialized references, and resource paths during moves. Use supported editor workflows for binary assets. Keep editor/test dependencies out of shipping runtime.
 - Use the installed engine version and native test conventions. Follow the game skill's selected adapter and enforcement guide; no executable game architecture validator is bundled.
 
-Before completing work, run the installed validator against each affected frontend/backend application: `frontend/scripts/validate-architecture.mjs` for frontends and `backend/scripts/validate-architecture.mjs` for backends. Then run the application's lint, typecheck, build, and relevant test commands. Follow each installed skill's `references/enforcement.md` for dependency setup and CI use. If a skill or validator is unavailable, report that limitation and still review the mandatory constraints above. Report commands run, unresolved violations, and limits; never claim an unrun check passed.
+Before completing work, run the installed validator against each affected supported React SPA/Next.js or backend application: `frontend/scripts/validate-architecture.mjs` with the matching profile for React SPA/Next.js and `backend/scripts/validate-architecture.mjs` for backends. Then run the application's lint, typecheck, build, and relevant test commands. Follow each installed skill's `references/enforcement.md` for dependency setup and CI use. If a skill or validator is unavailable, report that limitation and still review the mandatory constraints above. Report commands run, unresolved violations, and limits; never claim an unrun check passed.
 
 For game applications, run relevant available engine compile/import, tests, scene/asset checks, and target builds. Report the engine/version, actual results, unresolved issues, and checks not run. Never describe static review as a passed engine runtime check.
