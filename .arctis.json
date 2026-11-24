@@ -1,0 +1,37 @@
+{
+  "tasks": {
+    "columns": [
+      {
+        "id": "plan",
+        "title": "Plan"
+      },
+      {
+        "id": "progress",
+        "title": "In Progress"
+      },
+      {
+        "id": "done",
+        "title": "Done"
+      }
+    ],
+    "cards": [
+      {
+        "id": "c1",
+        "column": "plan",
+        "title": "test",
+        "desc": "",
+        "order": 0,
+        "urgency": "medium"
+      },
+      {
+        "id": "c2",
+        "column": "plan",
+        "title": "testttasdasd",
+        "desc": "",
+        "order": 1,
+        "urgency": "medium"
+      }
+    ],
+    "next_id": 3
+  }
+}
