@@ -2,13 +2,28 @@
   "name": "arctis",
   "displayName": "Arctis Architecture",
   "version": "1.0.0",
-  "description": "Architecture skills for React, TypeScript, and Hono projects: pages/feat/shared frontend structure, domain-driven backend, and monorepo coordination.",
+  "description": "Architecture skills for frontend, backend, and game projects: explicit ownership, dependency boundaries, native engine layouts, and monorepo coordination.",
   "author": {
     "name": "ranaufalmuha",
     "url": "https://github.com/ranaufalmuha"
   },
   "repository": "https://github.com/ranaufalmuha/arctis-skills",
   "license": "MIT",
-  "keywords": ["architecture", "frontend", "backend", "react", "typescript", "hono", "monorepo"],
-  "skills": ["./skills/architecture/"]
+  "keywords": [
+    "architecture",
+    "frontend",
+    "backend",
+    "react",
+    "typescript",
+    "hono",
+    "monorepo",
+    "game",
+    "unity",
+    "godot",
+    "unreal",
+    "bevy"
+  ],
+  "skills": [
+    "./skills/architecture/"
+  ]
 }

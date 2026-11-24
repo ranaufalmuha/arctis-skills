@@ -1,6 +1,6 @@
 {
   "name": "arctis-skills",
-  "description": "Arctis Architecture Agent Skills — enforceable frontend and backend architecture standards.",
+  "description": "Arctis Architecture Agent Skills \u2014 frontend, backend, and engine-native game architecture guidance.",
   "owner": {
     "name": "ranaufalmuha"
   },
@@ -8,7 +8,7 @@
     {
       "name": "arctis",
       "source": "./",
-      "description": "Architecture skills for React, TypeScript, and Hono projects"
+      "description": "Architecture skills for frontend, backend, game, and monorepo projects"
     }
   ]
 }

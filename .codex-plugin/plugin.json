@@ -1,7 +1,7 @@
 {
   "name": "arctis",
   "version": "1.0.0",
-  "description": "Architecture skills for React, TypeScript, and Hono projects: strict frontend boundaries, domain-owned backend code, and monorepo coordination.",
+  "description": "Architecture skills for frontend, backend, and game projects: explicit ownership, dependency boundaries, native engine layouts, and monorepo coordination.",
   "author": {
     "name": "ranaufalmuha",
     "url": "https://github.com/ranaufalmuha"
@@ -10,11 +10,14 @@
   "skills": "./skills/architecture/",
   "interface": {
     "displayName": "Arctis Architecture",
-    "shortDescription": "Frontend, backend, and monorepo architecture skills",
-    "longDescription": "Apply strict pages/feat/shared frontend boundaries, domain-owned backend responsibilities, and per-application coordination in monorepos.",
+    "shortDescription": "Frontend, backend, game, and monorepo architecture skills",
+    "longDescription": "Apply strict frontend and backend boundaries, engine-native game ownership, and per-application coordination in monorepos.",
     "developerName": "ranaufalmuha",
     "category": "Developer Tools",
-    "capabilities": ["Review architecture", "Guide implementation"],
+    "capabilities": [
+      "Review architecture",
+      "Guide implementation"
+    ],
     "websiteURL": "https://github.com/ranaufalmuha/arctis-skills"
   }
 }
